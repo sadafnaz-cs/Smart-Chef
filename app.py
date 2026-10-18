@@ -8,7 +8,6 @@
 """
 
 import os
-import gdown
 import gzip
 #import subprocess
 import streamlit as st  # Assuming you already import streamlit at the top
@@ -449,14 +448,9 @@ input[role="combobox"]::placeholder {
 # LOAD ARTIFACTS
 @st.cache_resource(show_spinner="🔥 Loading recipes & models...")
 def load_all():
-    file_id = "1hfpzaV-84msWpOcZhFsHV0bEKDiHTKC9"
-    output_path = "cleaned_recipes.csv"
+    url = "https://huggingface.co/datasets/sadafnaz-cs/smart-chef-data/resolve/main/cleaned_recipes.csv"
 
-    if not os.path.exists(output_path):
-        gdown.download(id=file_id, output=output_path, quiet=False)
-
-    df = pd.read_cvs(output_path
-                     )
+    df = pd.read_cvs(url)
     df['ingredients'] = df['ingredients'].apply(ast.literal_eval)
     df['ingredients_str'] = df['ingredients'].apply(lambda x: ' '.join(x))
 
