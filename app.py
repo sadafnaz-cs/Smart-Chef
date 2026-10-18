@@ -641,10 +641,15 @@ with tab2:
 
         col1, col2, col3 = st.columns(3)
         with col1:
+            if local_only:
+                display_cuisine = "PAKISTANI"
+            else:
+                display_cuisine = c_pred.upper()
+
             st.markdown(f"""
             <div class="result-card">
                 <div class="result-label">🍝 Cuisine</div>
-                <div class="result-value">{c_pred.upper()}</div>
+                <div class="result-value">{display_cuisine}</div>
             </div>
             """, unsafe_allow_html=True)
         with col2:
