@@ -631,13 +631,13 @@ with tab2:
             text = actual_ingredients.lower()
 
             c_pred = cuisine_clf.predict(cuisine_vec.transform([text]))[0]
-            c_probs = cuisine_clf.predict_proba(cuisine_vec.transform([text]))[0]
+            c_probs = cuisine_clf.predict_proba(cuisine_vec.transform([text]))[0].flatten()
 
             m_pred = meal_clf.predict(meal_vec.transform([text]))[0]
-            m_probs = meal_clf.predict_proba(meal_vec.transform([text]))[0]
+            m_probs = meal_clf.predict_proba(meal_vec.transform([text]))[0].flatten()
 
             k_pred = course_clf.predict(course_vec.transform([text]))[0]
-            k_probs = course_clf.predict_proba(course_vec.transform([text]))[0]
+            k_probs = course_clf.predict_proba(course_vec.transform([text]))[0].flatten()
 
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -671,89 +671,90 @@ with tab2:
 
         t1, t2, t3 = st.tabs(["Cuisine confidence", "Meal-time confidence", "Course confidence"])
         with t1:
-            chart_df = pd.DataFrame({'Probability': c_probs}, index=cuisine_clf.classes)
-
+            chart_data_c = pd.DataFrame({
+                "Cuisine": cuisine_clf.classes_,
+                "Probability": c_probs
+            })
             if local_only:
-                chart_df = chart_df.rename(index={'indian': 'Pakistani'})
+                chart_data_c["Cuisine"] = chart_data_c["Cuisine"].replace("indian", "Pakistani")
+            st.bar_chart(chart_data_c.set_index("Cuisine"), color="#ff7e5f", height=300)
 
-            st.bar_chart(
-                chart_df,
-                color="#ff7e5f", height=300,
-            )     
         with t2:
-            st.bar_chart(
-                pd.DataFrame({'Probability': m_probs}, index=meal_clf.classes_),
-                color="#ff7e5f", height=300,
-            )
+            chart_data_m = pd.DataFrame({
+                "Meal-Time": meal_clf.classes_,
+                "Probability": m_probs
+            })
+            st.bar_chart(chart_data_m.set_index("Meal-Time"), color="#ff7e5f", height=300)
+
         with t3:
-            st.bar_chart(
-                pd.DataFrame({'Probability': k_probs}, index=course_clf.classes_),
-                color="#ff7e5f", height=300,
-            )
+            chart_data_k = pd.DataFrame({
+                "Course": course_clf.classes_,
+                "Probability": k_probs
+            })
+            st.bar_chart(chart_data_k.set_index("Course"), color="#ff7e5f", height=300)
 
-# TAB 3 — Cooking Time Predictor
-with tab3:
-    st.markdown("### How long will this take to cook?")
-
-    # 1. Get the recipe selected in Tab 1
-    if "selected_recipe" in st.session_state:
-        chosen_recipe = st.session_state["selected_recipe"]
-
-        st.markdown(f"#### 🍲 Recipe: *{chosen_recipe}*")
-
-        # 2. Find that exact recipe in the dataset
-        recipe_row = df[df['name'] == chosen_recipe].iloc[0]
-
-        # 3. Safely extract and format ingredients
-        try:
-            if isinstance(recipe_row['ingredients'], list):
-                formatted_ingredients = [str(ing).strip().replace(" ", "_") for ing in recipe_row['ingredients']]
-                actual_ingredients = ", ".join(formatted_ingredients)
-            else:
-                actual_ingredients = str(recipe_row['ingredients']).strip().replace(" ", "_")
-        except:
-            actual_ingredients = "chicken, garlic, onion, tomato, olive_oil"
-    else:
-        st.markdown("#### 🍲 Recipe: *Default*")
-        actual_ingredients = "chicken, garlic, onion, tomato, olive_oil"
-
-    # 4. Calculate the ingredient count immediately
-    clean_input_for_counting = actual_ingredients.replace(",", " ")
-    n_ing = len(clean_input_for_counting.split())
-
-    # 5. Show the count right above the text area so you see it instantly
-    st.info(f"📊 This recipe contains **{n_ing}** ingredients.")
-
-    # 6. The text area
-    ing_input = st.text_area(
-        "Ingredients:",
-        value=actual_ingredients,
-        height=110
-    )
-
-    # 7. Updated Button Text
-    if st.button("⏱️ Predict Time & Confirm Ingredients"):
-        with st.spinner("Estimating..."):
-            # Recalculate in case you manually edited the text box
-            clean_input_for_counting = ing_input.replace(",", " ")
+    # TAB 3 - Cooking Time Predictor
+    with tab3:
+        st.markdown("#### How long will this take to cook?")
+        
+        # 1. Get the recipe selected in Tab 1
+        if "selected_recipe" in st.session_state:
+            chosen_recipe = st.session_state["selected_recipe"]
+            st.markdown(f"#### 🍲 Recipe: *{chosen_recipe}*")
+            
+            # 2. Find that exact recipe in the dataset
+            recipe_row = df[df['name'] == chosen_recipe].iloc[0]
+            
+            # 3. Safely extract and format ingredients
+            try:
+                if isinstance(recipe_row['ingredients'], list):
+                    formatted_ingredients = [str(ing).strip().replace(" ", "_") for ing in recipe_row['ingredients']]
+                    actual_ingredients = ", ".join(formatted_ingredients)
+                else:
+                    actual_ingredients = str(recipe_row['ingredients']).strip().replace(" ", "_")
+            except:
+                actual_ingredients = "chicken, garlic, onion, tomato, olive_oil"
+                
+            # 4. Calculate the ingredient count immediately
+            clean_input_for_counting = actual_ingredients.replace(",", " ")
             n_ing = len(clean_input_for_counting.split())
-
-            clean_input_for_model = ing_input.replace(",", " ").lower()
-
-            ing_vec = reg_vec.transform([clean_input_for_model])
-            numeric = np.array([[n_ing, sum(len(i) for i in clean_input_for_model.split())]])
-            X = hstack([ing_vec, numeric]).tocsr()
-            pred = reg.predict(X)[0]
-
-        st.markdown(f"""
-        <div class="result-card">
-            <div class="result-label">Estimated Cooking Time</div>
-            <div class="result-value" style="font-size:2.8rem;">{pred:.0f} min</div>
-            <div class="recipe-meta" style="margin-top:10px;">
-                Based on <b>{n_ing}</b> ingredient{'s' if n_ing != 1 else ''}
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+            
+            # 5. Show the count right above the text area
+            st.info(f"🥕 This recipe contains **{n_ing}** ingredients.")
+            
+            # 6. The text area
+            ing_input = st.text_area(
+                "Ingredients:",
+                value=actual_ingredients,
+                height=110
+            )
+            
+            # 7. Predict Button (Fixed the 'st.buttn' typo)
+            if st.button("⏳ Predict Time & Confirm Ingredients"):
+                with st.spinner("Estimating..."):
+                    # Recalculate in case you manually edited the text box
+                    clean_input_for_counting = ing_input.replace(",", " ")
+                    n_ing = len(clean_input_for_counting.split())
+                    
+                    clean_input_for_model = ing_input.replace(",", " ").lower()
+                    
+                    ing_vec = reg_vec.transform([clean_input_for_model])
+                    numeric = np.array([[n_ing, sum(len(i) for i in clean_input_for_model.split())]])
+                    X = hstack([ing_vec, numeric]).tocsr()
+                    pred = reg.predict(X)[0]
+                    
+                    # Show the result nicely
+                    st.markdown(f"""
+                    <div class="result-card">
+                        <div class="result-label">Estimated Cooking Time</div>
+                        <div class="result-value" style="font-size:2.8rem;">{pred:.0f} min</div>
+                        <div class="recipe-meta" style="margin-top:10px;">
+                            Based on <b>{n_ing}</b> ingredient{'s' if n_ing != 1 else ''}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+        else:
+            st.info("Please select a recipe in Tab 1 first.")
 
 # FOOTER
 st.markdown("<br><br>", unsafe_allow_html=True)
