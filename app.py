@@ -450,8 +450,13 @@ input[role="combobox"]::placeholder {
 @st.cache_resource(show_spinner="🔥 Loading recipes & models...")
 def load_all():
     file_id = "1hfpzaV-84msWpOcZhFsHV0bEKDiHTKC9"
-    url = f'https://drive.google.com/uc?id={file_id}'
-    df = pd.read_cvs(url)
+    output_path = "cleaned_recipes.csv"
+
+    if not os.path.exists(output_path):
+        gdown.download(id=file_id, output=output_path, quiet=False)
+
+    df = pd.read_cvs(output_path
+                     )
     df['ingredients'] = df['ingredients'].apply(ast.literal_eval)
     df['ingredients_str'] = df['ingredients'].apply(lambda x: ' '.join(x))
 
