@@ -671,7 +671,7 @@ with tab2:
 
         t1, t2, t3 = st.tabs(["Cuisine confidence", "Meal-time confidence", "Course confidence"])
         with t1:
-            chart_df = pd.dataFrame({'Probability': c_probs}, index=cuisine_clf.classes)
+            chart_df = pd.DataFrame({'Probability': c_probs}, index=cuisine_clf.classes)
 
             if local_only:
                 chart_df = chart_df.rename(index={'indian': 'Pakistani'})
