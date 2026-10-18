@@ -8,6 +8,7 @@
 """
 
 import os
+import gdown
 import gzip
 #import subprocess
 import streamlit as st  # Assuming you already import streamlit at the top
@@ -448,7 +449,9 @@ input[role="combobox"]::placeholder {
 # LOAD ARTIFACTS
 @st.cache_resource(show_spinner="🔥 Loading recipes & models...")
 def load_all():
-    df = pd.read_csv('data/dummy_recipes.csv')
+    file_id = "1hfpzaV-84msWpOcZhFsHV0bEKDiHTKC9"
+    url = f'https://drive.google.com/uc?id={file_id}'
+    df = pd.read_cvs(url)
     df['ingredients'] = df['ingredients'].apply(ast.literal_eval)
     df['ingredients_str'] = df['ingredients'].apply(lambda x: ' '.join(x))
 
@@ -462,12 +465,8 @@ def load_all():
     with gzip.open('models/regression_model.pkl', 'rb') as f:
         reg, reg_vec = pickle.load(f)
 
-    # rec_vec = TfidfVectorizer(max_features=3000, min_df=5, stop_words='english')
-    # rec_matrix = rec_vec.fit_transform(df['ingredients_str'])
-
-    import scipy.sparse
-    # Creae a dummy matrix of zeros so the app does not crash when it loads.
-    rec_matrix = scipy.sparse.csr_matrix((len(df), 3000))
+    rec_vec = TfidfVectorizer(max_features=3000, min_df=5, stop_words='english')
+    rec_matrix = rec_vec.fit_transform(df['ingredients_str'])
 
     return (
         df,

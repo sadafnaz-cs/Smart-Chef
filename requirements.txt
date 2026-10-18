@@ -6,3 +6,4 @@ scipy
 google-genai
 python-dotenv
 requests
+gdown
