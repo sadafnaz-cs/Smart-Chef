@@ -671,10 +671,15 @@ with tab2:
 
         t1, t2, t3 = st.tabs(["Cuisine confidence", "Meal-time confidence", "Course confidence"])
         with t1:
+            chart_df = pd.dataFrame({'Probability': c_probs}, index=cuisine_clf.classes)
+
+            if local_only:
+                chart_df = chart_df.rename(index={'indian': 'Pakistani'})
+
             st.bar_chart(
-                pd.DataFrame({'Probability': c_probs}, index=cuisine_clf.classes_),
+                chart_df,
                 color="#ff7e5f", height=300,
-            )
+            )     
         with t2:
             st.bar_chart(
                 pd.DataFrame({'Probability': m_probs}, index=meal_clf.classes_),
