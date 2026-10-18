@@ -462,8 +462,12 @@ def load_all():
     with gzip.open('models/regression_model.pkl', 'rb') as f:
         reg, reg_vec = pickle.load(f)
 
-    rec_vec = TfidfVectorizer(max_features=3000, min_df=5, stop_words='english')
-    rec_matrix = rec_vec.fit_transform(df['ingredients_str'])
+    # rec_vec = TfidfVectorizer(max_features=3000, min_df=5, stop_words='english')
+    # rec_matrix = rec_vec.fit_transform(df['ingredients_str'])
+
+    import scipy.sparse
+    # Creae a dummy matrix of zeros so the app does not crash when it loads.
+    rec_matrix = scipy.sparse.csr_matrix((len(df), 3000))
 
     return (
         df,
