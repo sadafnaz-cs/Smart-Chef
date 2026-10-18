@@ -8,6 +8,8 @@
 """
 
 import os
+import requests
+from io import StringIO
 import gzip
 #import subprocess
 import streamlit as st  # Assuming you already import streamlit at the top
@@ -449,8 +451,9 @@ input[role="combobox"]::placeholder {
 @st.cache_resource(show_spinner="🔥 Loading recipes & models...")
 def load_all():
     url = "https://huggingface.co/datasets/sadafnaz-cs/smart-chef-data/resolve/main/cleaned_recipes.csv"
+    response = requests.get(url)
+    df = pd.read_csv(StringIO(response.text))
 
-    df = pd.read_cvs(url)
     df['ingredients'] = df['ingredients'].apply(ast.literal_eval)
     df['ingredients_str'] = df['ingredients'].apply(lambda x: ' '.join(x))
 
